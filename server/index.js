@@ -143,7 +143,7 @@ io.on('connection', (socket) => {
     rooms.addPlayer(room, socket.id, cleanName);
     socket.data.code = room.code;
     socket.join(room.code);
-    socket.emit('game-joined', { code: room.code, playerId: socket.id, isHost: true, config: {
+    socket.emit('game-joined', { code: room.code, playerId: socket.id, isHost: false, config: {
       rounds: room.rounds,
       roundSeconds: room.roundSeconds,
       catSeconds: room.catSeconds,

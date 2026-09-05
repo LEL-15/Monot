@@ -32,8 +32,8 @@ h1,h2,h3{ font-family:'Fredoka', sans-serif; margin:0; }
 #title .a{ color: var(--wordA); }
 #title .b{ color: var(--wordB); }
 #tagline{ text-align:center; color:var(--ink-dim); margin-bottom: 28px; font-size:0.95rem; }
-#reveal{ width: fit-content; margin:auto }
-#cover{ width: 10em; opacity: 1; transition: opacity 1.5s ease; }
+#logo-images{ position: relative; width: 10em; height: 10em; margin: 0 auto 12px; }
+.logo-image{ width: 10em; opacity: 1; transition: opacity 3s ease; position: absolute; top: 0; left: 0;}
 #cover.faded{ opacity: 0; }
 
 /* Cards */

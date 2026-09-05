@@ -28,7 +28,10 @@
   function fadeCover() {
     const cover = document.getElementById('cover');
     if (!cover) return;
-    cover.classList.add('faded');
+
+    setTimeout(() => {
+      cover.classList.add('faded');
+    }, 500);
   }
 
   // ---------------- rendering ----------------
