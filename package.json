@@ -1,0 +1,16 @@
+{
+  "name": "monot-game",
+  "version": "1.0.0",
+  "description": "A party game: draw the word, sort the drawings",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

@@ -1,0 +1,24 @@
+<div data-logo></div>
+<div class="card">
+    <h2>Set up your game</h2>
+    <form id="hostForm">
+        <label for="name">Your name</label>
+        <input type="text" id="name" maxlength="18" required  />
+        <label for="gameCode">Game code</label>
+        <input type="text" id="gameCode" maxlength="18" required  />
+        <div class="row">
+            <div><label for="rounds">Rounds</label><input type="number" id="rounds" value="3" min="1" max="10" /></div>
+            <div><label for="roundSeconds">Draw time (sec)</label><input type="number" id="roundSeconds" value="30" min="5" max="180" /></div>
+            <div><label for="catSeconds">Sort time (sec)</label><input type="number" id="catSeconds" value="60" min="5" max="120" /></div>
+        </div>
+        <label for="difficulty">Difficulty</label>
+        <select name="difficulty" id="difficulty">
+            <option value="Easy">Easy</option>
+            <option value="Hard">Hard</option>
+        </select>
+
+        <button class="btn-primary" id="createBtn" type="submit">Create Game</button>
+    </form>
+    <button class="btn-ghost page-button" data-view="home">Back</button>
+</div>
+<div id="hostError"></div>

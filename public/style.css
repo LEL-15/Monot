@@ -1,0 +1,103 @@
+:root{
+  --bg:#10142a;
+  --panel:#089593;
+  --panel2:#080A95;
+  --line: #343d72;
+  --ink:#f4f2ea;
+  --ink-dim:#9aa0c4;
+  --wordA:#950851;
+  --wordA-ink:#04241a;
+  --wordB:#519508;
+  --wordB-ink:#3a0416;
+  --gold:#f9cb34;
+  --radius: 16px;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:  #085095 0%;
+  color: var(--ink);
+  font-family:'Inter', sans-serif;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding: 24px 14px 60px;
+}
+#app{ width:100%; max-width: 560px; }
+h1,h2,h3{ font-family:'Fredoka', sans-serif; margin:0; }
+
+/* Logo */
+#logo{text-align:center; margin-bottom: 24px; }
+#title{ text-align:center; font-size: 2.6rem; letter-spacing: 0.5px; margin-bottom: 6px; }
+#title .a{ color: var(--wordA); }
+#title .b{ color: var(--wordB); }
+#tagline{ text-align:center; color:var(--ink-dim); margin-bottom: 28px; font-size:0.95rem; }
+#reveal{ width: fit-content; margin:auto }
+#cover{ width: 10em; opacity: 1; transition: opacity 1.5s ease; }
+#cover.faded{ opacity: 0; }
+
+/* Cards */
+.card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 16px; }
+.card h2{ font-size:1.3rem; margin-bottom: 14px; }
+.row{ display:flex; gap:10px; }
+.row > *{ flex:1; }
+label{ display:block; font-size:0.8rem; color:var(--ink-dim); margin: 12px 0 6px; font-weight:600; }
+label:first-child{ margin-top:0; }
+
+/* Buttons */
+button{
+  font-family:'Fredoka', sans-serif; font-weight:600; font-size: 1rem; border:none;
+  border-radius: 12px; padding: 13px 18px; cursor:pointer; transition: transform 0.08s ease;
+}
+button:active{ transform: scale(0.97); }
+button:disabled{ opacity:0.4; cursor:not-allowed; }
+.btn-primary{ background: var(--wordB); color:#241a02; width:100%; margin-top:16px; }
+.btn-ghost{ background: var(--wordA); color: var(--ink); border:1px solid var(--line); width:100%; margin-top:10px; }
+.page-button{ display:block; text-align:center; text-decoration:none; }
+.pill{ display:inline-block; padding: 4px 12px; border-radius: 999px; font-weight:700; font-size:0.85rem; }
+.pill-a{ background: var(--wordA); color: var(--wordA-ink); }
+.pill-b{ background: var(--wordB); color: var(--wordB-ink); }
+.code-display{ text-align:center; font-family:'Fredoka',sans-serif; font-size: 2.4rem; letter-spacing: 10px; background: var(--panel2); border-radius: 12px; padding: 14px 8px; margin: 8px 0 4px; color: var(--gold); }
+.hint{ text-align:center; color:var(--ink-dim); font-size:0.82rem; margin-top:4px; }
+.player-list{ list-style:none; padding:0; margin:0; }
+.player-list li{ display:flex; justify-content:space-between; align-items:center; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.player-list li:last-child{ border-bottom:none; }
+.player-score{ color: var(--gold); font-weight:700; font-family:'Fredoka',sans-serif; }
+.word-banner{ text-align:center; font-family:'Fredoka',sans-serif; font-size:1.7rem; margin: 4px 0 14px; padding: 14px; border-radius: 12px; }
+.timer{ text-align:center; font-family:'Fredoka',sans-serif; font-size:1.1rem; color:var(--ink-dim); margin-bottom:10px; }
+.timer.low{ color:var(--wordB); }
+canvas{ display:block; width:100%; max-width: 480px; margin: 0 auto; background:#fff; border-radius: 12px; touch-action:none; cursor:crosshair; }
+.canvas-wrap{ display:flex; justify-content:center; }
+.toolbar{ display:flex; gap:8px; justify-content:center; align-items:center; margin: 12px 0; flex-wrap:wrap; }
+.swatch{ width:32px; height:32px; border-radius:50%; border: 2px solid var(--line); cursor:pointer; padding:0; }
+.swatch.active{ border-color: var(--gold); }
+.drawing-card{ background: var(--panel2); border-radius:14px; padding:14px; margin-bottom:14px; }
+.drawing-card img{ width:100%; border-radius:10px; background:#fff; display:block; }
+.choice-row{ display:flex; gap:10px; margin-top:10px; }
+.choice-btn{ flex:1; padding: 12px; border-radius:10px; font-family:'Fredoka',sans-serif; font-weight:600; border:2px solid var(--line); background:var(--panel); color:var(--ink); }
+.choice-btn.sel-a{ background:var(--wordA); color:var(--wordA-ink); border-color:var(--wordA); }
+.choice-btn.sel-b{ background:var(--wordB); color:var(--wordB-ink); border-color:var(--wordB); }
+.status-msg{ text-align:center; color:var(--ink-dim); padding: 30px 10px; }
+.reveal-item{ background:var(--panel2); border-radius:14px; padding:14px; margin-bottom:14px; }
+.reveal-item img{ width:100%; max-width:280px; display:block; margin:8px auto; border-radius:10px; background:#fff; }
+.guess-tag{ display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:0.8rem; margin:3px 3px 0 0; font-weight:600; }
+.guess-right{ background: rgba(46,230,166,0.18); color:var(--wordA); }
+.guess-wrong{ background: rgba(255,92,138,0.18); color:var(--wordB); }
+.points-badge{ float:right; background:var(--gold); color:#241a02; padding:3px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; font-family:'Fredoka',sans-serif; }
+.trophy{ font-size:3.4rem; text-align:center; margin-bottom:6px; }
+.winner-name{ text-align:center; font-family:'Fredoka',sans-serif; font-size:1.8rem; color:var(--gold); margin-bottom: 4px; }
+.final-list li.win{ color: var(--gold); }
+.small-note{ color:var(--ink-dim); font-size:0.78rem; text-align:center; margin-top:18px; line-height:1.5; }
+.error-box{ background: rgba(255,92,138,0.14); border:1px solid var(--wordB); color:var(--wordB); padding:12px 14px; border-radius:10px; margin-bottom:14px; font-size:0.9rem; }
+
+/* Game form */
+#gameCode{text-transform: uppercase;}
+input[type=text], input[type=number]{
+  width:100%; background: var(--panel2); border:1px solid var(--line); color: var(--ink);
+  padding: 12px 14px; border-radius: 10px; font-size: 1rem; font-family: inherit;
+}
+input:focus{ outline:2px solid var(--gold); }
+select{ width:100%; background: var(--panel2); border:1px solid var(--line); color: var(--ink);
+  padding: 12px 14px; border-radius: 10px; font-size: 1rem; font-family: inherit;
+}
+label { margin-top: 1em; }
