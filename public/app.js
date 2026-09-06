@@ -321,11 +321,8 @@
 
   function renderReveal() {
     const data = App.revealData;
-    console.log("Data is " + JSON.stringify(data));
     const roundNumberEl = document.getElementById('revealRoundNumber');
     const revealDetails = document.getElementById('revealDetails');
-
-    console.log("Details are " + JSON.stringify(data.details));
 
     if (!data) {
       if (roundNumberEl) roundNumberEl.textContent = '0';
@@ -337,7 +334,6 @@
     if (revealDetails) {
       fetch('/views/drawing-score-card.html').then(r => r.text()).then(template => {
         const cards = Object.values(data.details).map(d => {
-          console.log("Single detail is " + JSON.stringify(d));
           const wrapper = document.createElement('div');
           wrapper.innerHTML = template.trim();
           const card = wrapper.firstElementChild;
@@ -402,26 +398,27 @@
       });
     }
 
-    // NOTE: host button handler moved into fetch handler above
-
   }
 
   function renderFinished() {
     const players = App.finalLeaderboard;
     const topScore = players.length ? players[0].score : 0;
     const winners = players.filter(p => p.score === topScore);
-    root.innerHTML = `
-      <div class="trophy">\u{1F3C6}</div>
-      <div class="winner-name">${winners.map(w => esc(w.name)).join(' & ')}</div>
-      <div class="hint" style="margin-bottom:18px;">${winners.length > 1 ? 'tie for the win!' : 'wins the game!'}</div>
-      <div class="card">
-        <h2>Final Scores</h2>
-        <ul class="player-list final-list">${players.map(p => `<li class="${p.score === topScore ? 'win' : ''}"><span>${esc(p.name)}</span><span class="player-score">${p.score}</span></li>`).join('')}</ul>
-      </div>
-      <button class="btn-primary" id="newGameBtn">Back to Home</button>
-    `;
-    fadeCover();
-    document.getElementById('newGameBtn').onclick = () => { window.location.reload(); };
+    fetch('/views/finished.html').then(r => r.text()).then(template => {
+      root.innerHTML = template;
+
+      document.getElementById('winnerName').textContent = winners.map(w => w.name).join(' & ');
+      document.getElementById('winnerHint').textContent = winners.length > 1 ? 'tie for the win!' : 'wins the game!';
+      document.getElementById('finalScores').innerHTML = players.map(p =>
+        `<li class="${p.score === topScore ? 'win' : ''}"><span>${esc(p.name)}</span><span class="player-score">${p.score}</span></li>`
+      ).join('');
+
+      fadeCover();
+      document.getElementById('newGameBtn').onclick = () => { window.location.reload(); };
+    }).catch(err => {
+      console.error('Failed loading finished view', err);
+      root.innerHTML = '<div class="status-msg">Unable to load final results.</div>';
+    });
   }
 
   // ---------------- socket events ----------------
@@ -463,7 +460,6 @@
 
   socket.on('phase-reveal', (payload) => {
     App.revealData = payload;
-    console.log("App reveal data is " + JSON.stringify(payload));
     setScreen('reveal');
   });
 

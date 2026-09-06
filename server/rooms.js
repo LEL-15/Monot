@@ -125,8 +125,6 @@ function computeRoundResults(room, roundIdx) {
 
   room.players.forEach((p, id) => { p.score += drawPoints[id] + guessPoints[id] });
 
-  console.log("Details are " + JSON.stringify(details));
-
   const result = { details, drawPoints: drawPoints, guessPoints: guessPoints, wordPair: room.roundWords[roundIdx - 1] };
   room.results[roundIdx] = result;
   return result;
