@@ -7,7 +7,6 @@ module.exports = [
   ["Robot", "Alien"],
   ["Pirate", "Ninja"],
   ["Summer", "Winter"],
-  ["Coffee", "Tea"],
   ["Sun", "Moon"],
   ["Castle", "Spaceship"],
   ["Dragon", "Unicorn"],

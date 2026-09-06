@@ -198,6 +198,7 @@
     const roundNumber = document.getElementById('drawRoundNumber');
     const totalRounds = document.getElementById('drawTotalRounds');
     const wordText = document.getElementById('drawWord');
+    const drawControls = document.getElementById('drawControls');
     const swatches = document.querySelectorAll('.swatch');
     const clearBtn = document.getElementById('clearBtn');
     const submitBtn = document.getElementById('submitDraw');
@@ -206,6 +207,15 @@
     if (roundNumber) roundNumber.textContent = String(r.round);
     if (totalRounds) totalRounds.textContent = String(r.rounds);
     if (wordText) wordText.textContent = r.word || '...';
+
+    const previewActive = r.previewEndsAt && Date.now() < r.previewEndsAt;
+    if (drawControls) drawControls.hidden = previewActive;
+    if (previewActive) {
+      startLocalCountdown(r.previewEndsAt, 'timer', () => {
+        renderDrawing();
+      });
+      return;
+    }
 
     swatches.forEach(sw => {
       const isActive = sw.dataset.color === App.drawColor;

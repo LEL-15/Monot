@@ -29,7 +29,8 @@ function startDrawingPhase(room, roundIdx) {
   room.currentRound = roundIdx;
   rooms.assignWordsForRound(room, roundIdx);
   room.phase = 'drawing';
-  room.phaseEndsAt = Date.now() + room.roundSeconds * 1000;
+  const previewEndsAt = Date.now() + 5000;
+  room.phaseEndsAt = previewEndsAt + room.roundSeconds * 1000;
   room.drawings[roundIdx] = room.drawings[roundIdx] || {};
 
   room.players.forEach((player, playerId) => {
@@ -38,11 +39,12 @@ function startDrawingPhase(room, roundIdx) {
       round: roundIdx,
       rounds: room.rounds,
       word,
+      previewEndsAt,
       phaseEndsAt: room.phaseEndsAt,
     });
   });
 
-  room.timer = setTimeout(() => startCategorizingPhase(room), room.roundSeconds * 1000 + 500);
+  room.timer = setTimeout(() => startCategorizingPhase(room), room.roundSeconds * 1000 + 5500); // Round seconds + 5s preview + autosubmit buffer
 }
 
 function startCategorizingPhase(room) {
