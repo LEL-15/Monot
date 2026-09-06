@@ -1,5 +1,5 @@
 const EASY_WORDS = require('./easyWordPairs');
-const HARD_WORDS = require('./easyWordPairs');
+const HARD_WORDS = require('./hardWordPairs');
 
 // All active games live in memory, keyed by 4-letter room code.
 // This is intentional: games are short-lived and don't need a database.
@@ -73,9 +73,8 @@ function leaderboard(room) {
 function assignWordsForRound(room, roundIdx) {
   const pair = room.roundWords[roundIdx - 1];
   const ids = shuffled(Array.from(room.players.keys()));
-  const half = Math.ceil(ids.length / 2);
   const assignment = {};
-  ids.forEach((id, i) => { assignment[id] = i < half ? pair[0] : pair[1]; });
+  ids.forEach((id, i) => { assignment[id] = pair[Math.round(Math.random())] });
   room.assignments[roundIdx] = assignment;
   return assignment;
 }
@@ -85,10 +84,12 @@ function computeRoundResults(room, roundIdx) {
   const drawings = room.drawings[roundIdx] || {};
   const cats = room.categorizations[roundIdx] || {};
 
-  const roundPoints = {};
-  room.players.forEach((p, id) => { roundPoints[id] = 0; });
+  const drawPoints = {};
+  const guessPoints = {};
+  room.players.forEach((p, id) => { drawPoints[id] = 0; });
+  room.players.forEach((p, id) => { guessPoints[id] = 0; });
 
-  const details = [];
+  const details = {};
   for (const drawerId of Object.keys(drawings)) {
     const drawing = drawings[drawerId];
     if (!drawing) continue;
@@ -101,26 +102,32 @@ function computeRoundResults(room, roundIdx) {
       if (guess === undefined || guess === null) continue;
       const correct = guess === trueWord;
       if (correct) {
-        roundPoints[drawerId] = (roundPoints[drawerId] || 0) + 1;
-        roundPoints[guesserId] = (roundPoints[guesserId] || 0) + 1;
+        drawPoints[drawerId] = (drawPoints[drawerId] || 0) + 1;
+        guessPoints[guesserId] = (guessPoints[guesserId] || 0) + 1;
       }
       const guesser = room.players.get(guesserId);
       guesses.push({ guesserId, guesserName: guesser ? guesser.name : '???', guess, correct });
     }
     const drawer = room.players.get(drawerId);
-    details.push({
+    details[drawerId] = {
       drawerId,
       drawerName: drawer ? drawer.name : '???',
       word: trueWord,
       dataUrl: drawing.dataUrl,
       guesses,
-      pointsEarned: roundPoints[drawerId] || 0,
-    });
+      drawPoints: drawPoints[drawerId] || 0,
+    };
   }
 
-  room.players.forEach((p, id) => { p.score += (roundPoints[id] || 0); });
+  for (const drawerId of Object.keys(drawings)) {
+    details[drawerId]['guessPoints'] = guessPoints[drawerId] || 0;
+  }
 
-  const result = { details, roundPoints, wordPair: room.roundWords[roundIdx - 1] };
+  room.players.forEach((p, id) => { p.score += drawPoints[id] + guessPoints[id] });
+
+  console.log("Details are " + JSON.stringify(details));
+
+  const result = { details, drawPoints: drawPoints, guessPoints: guessPoints, wordPair: room.roundWords[roundIdx - 1] };
   room.results[roundIdx] = result;
   return result;
 }

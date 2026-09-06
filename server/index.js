@@ -42,7 +42,7 @@ function startDrawingPhase(room, roundIdx) {
     });
   });
 
-  room.timer = setTimeout(() => startCategorizingPhase(room), room.roundSeconds * 1000);
+  room.timer = setTimeout(() => startCategorizingPhase(room), room.roundSeconds * 1000 + 500);
 }
 
 function startCategorizingPhase(room) {

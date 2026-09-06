@@ -33,3 +33,21 @@ npm start
 Then open **http://localhost:3000** in a couple of browser tabs (or on your
 phone via your computer's local IP address, e.g. `http://192.168.1.23:3000`)
 to test hosting a game in one tab and joining from another.
+
+
+## Deploy to Render (free tier)
+
+1. Push this project to a GitHub repo.
+2. In the Render dashboard, click **New → Web Service** and connect that repo.
+3. Render should auto-detect Node. Set:
+   - **Build command**: `npm install`
+   - **Start command**: `npm start`
+4. Choose the **Free** instance type. No environment variables or database
+   are needed.
+5. Deploy. You'll get a URL like `https://your-app.onrender.com` — that's
+   the link everyone opens to host or join a game.
+
+Render's free web services spin down after about 15 minutes with no
+traffic, and take roughly a minute to spin back up on the next request.
+That only affects the *first* person to open the link after a period of
+inactivity — once a game is running, active socket traffic keeps it awake.

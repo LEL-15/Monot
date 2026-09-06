@@ -1,0 +1,14 @@
+<div id="drawScreen">
+  <h2 style="margin-bottom:6px;">Drawing round <span id="drawRoundNumber">0</span> of <span id="drawTotalRounds">0</span></h2>
+  <div class="timer" id="timer">--s</div>
+  <div class="word-banner" style="background:var(--wordA); color:var(--wordA-ink);" id="wordBanner">Draw: <span id="drawWord">...</span></div>
+  <div class="canvas-wrap"><canvas id="board" width="480" height="330"></canvas></div>
+  <div class="toolbar">
+    <button class="swatch active" data-color="#000000" style="background:#000000" aria-label="Black"></button>
+    <button class="swatch" data-color="#950851" style="background:#950851" aria-label="Magenta"></button>
+    <button class="swatch" data-color="#519508" style="background:#519508" aria-label="Green"></button>
+    <button class="swatch" data-color="#f9cb34" style="background:#f9cb34" aria-label="Gold"></button>
+    <button id="clearBtn" class="btn-ghost" style="width:auto; margin:0; padding:8px 14px;">Clear</button>
+  </div>
+  <button class="btn-primary" id="submitDraw">Submit Drawing</button>
+</div>

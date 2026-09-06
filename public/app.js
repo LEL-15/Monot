@@ -121,7 +121,7 @@
       return;
     }
 
-    if (viewName === 'categorizing' || viewName === 'reveal') {
+    if (viewName === 'drawing' || viewName === 'categorizing' || viewName === 'reveal') {
       render();
       return;
     }
@@ -129,7 +129,7 @@
 
   function setScreen(name) {
     App.screen = name;
-    if (['home', 'host', 'join', 'lobby', 'categorizing', 'reveal'].includes(name)) {
+    if (['home', 'host', 'join', 'lobby', 'drawing', 'categorizing', 'reveal'].includes(name)) {
       loadView(name);
       return;
     }
@@ -195,27 +195,47 @@
 
   function renderDrawing() {
     const r = App.round;
-    renderIntoTarget('drawScreen', `
-      <div class="tagline" style="margin-bottom:6px;">Round ${r.round} of ${r.rounds}</div>
-      <div class="timer" id="timer">--s</div>
-      <div class="word-banner" style="background:var(--wordA); color:var(--wordA-ink);" id="wordBanner">Draw: ${esc(r.word)}</div>
-      <div class="canvas-wrap"><canvas id="board" width="480" height="330"></canvas></div>
-      <div class="toolbar">
-        ${['#000000', '#950851', '#519508', '#f9cb34'].map(c => `<button class="swatch ${c === App.drawColor ? 'active' : ''}" data-color="${c}" style="background:${c}"></button>`).join('')}
-        <button id="clearBtn" class="btn-ghost" style="width:auto; margin:0; padding:8px 14px;">Clear</button>
-      </div>
-      <button class="btn-primary" id="submitDraw">Submit Drawing</button>
-      <div class="small-note">Your word is private &mdash; only you can see it. Others will try to guess it from your drawing.</div>
-    `);
-    setupCanvas();
-    document.querySelectorAll('.swatch').forEach(sw => {
-      sw.onclick = () => { App.drawColor = sw.dataset.color; document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active')); sw.classList.add('active'); };
+    const roundNumber = document.getElementById('drawRoundNumber');
+    const totalRounds = document.getElementById('drawTotalRounds');
+    const wordText = document.getElementById('drawWord');
+    const swatches = document.querySelectorAll('.swatch');
+    const clearBtn = document.getElementById('clearBtn');
+    const submitBtn = document.getElementById('submitDraw');
+    const board = document.getElementById('board');
+
+    if (roundNumber) roundNumber.textContent = String(r.round);
+    if (totalRounds) totalRounds.textContent = String(r.rounds);
+    if (wordText) wordText.textContent = r.word || '...';
+
+    swatches.forEach(sw => {
+      const isActive = sw.dataset.color === App.drawColor;
+      sw.classList.toggle('active', isActive);
+      sw.onclick = () => {
+        App.drawColor = sw.dataset.color;
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        sw.classList.add('active');
+      };
     });
-    document.getElementById('clearBtn').onclick = () => {
-      const cv = document.getElementById('board'); const ctx = cv.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
-    };
-    document.getElementById('submitDraw').onclick = () => submitDrawing();
+
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        const cv = document.getElementById('board');
+        if (!cv) return;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, cv.width, cv.height);
+      };
+    }
+
+    if (submitBtn) {
+      submitBtn.onclick = () => submitDrawing();
+    }
+
+    if (board && !board.dataset.ready) {
+      setupCanvas();
+      board.dataset.ready = 'true';
+    }
+
     startLocalCountdown(r.phaseEndsAt, 'timer', () => { if (!App.drawSubmitted) submitDrawing(); });
   }
 
@@ -301,8 +321,11 @@
 
   function renderReveal() {
     const data = App.revealData;
+    console.log("Data is " + JSON.stringify(data));
     const roundNumberEl = document.getElementById('revealRoundNumber');
     const revealDetails = document.getElementById('revealDetails');
+
+    console.log("Details are " + JSON.stringify(data.details));
 
     if (!data) {
       if (roundNumberEl) roundNumberEl.textContent = '0';
@@ -312,31 +335,75 @@
 
     if (roundNumberEl) roundNumberEl.textContent = String(data.round);
     if (revealDetails) {
-      revealDetails.innerHTML = `
-        ${data.details.map(d => `
-          <div class="reveal-item">
-            <span class="points-badge">+${d.pointsEarned}</span>
-            <strong>${esc(d.drawerName)}</strong> was drawing <span class="pill ${d.word === data.wordPair[0] ? 'pill-a' : 'pill-b'}">${esc(d.word)}</span>
-            <img src="${d.dataUrl}" alt="drawing"/>
-            <div>${d.guesses.map(g => `<span class="guess-tag ${g.correct ? 'guess-right' : 'guess-wrong'}">${g.correct ? '\u2713' : '\u2717'} ${esc(g.guesserName)}</span>`).join('') || '<span class="hint">No one guessed this one.</span>'}</div>
+      fetch('/views/drawing-score-card.html').then(r => r.text()).then(template => {
+        const cards = Object.values(data.details).map(d => {
+          console.log("Single detail is " + JSON.stringify(d));
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = template.trim();
+          const card = wrapper.firstElementChild;
+
+          const drawerEl = card.querySelector('.score-card-drawer');
+          const wordEl = card.querySelector('.score-card-word');
+          const drawingPointsEl = card.querySelector('.drawing-card-points');
+          const guessingPointsEl = card.querySelector('.guessing-card-points');
+          const imgEl = card.querySelector('.score-card-image');
+          const guessesEl = card.querySelector('.score-card-guesses');
+
+          if (drawerEl) drawerEl.textContent = d.drawerName;
+          if (wordEl) {
+            wordEl.textContent = d.word;
+            // apply pill class for A/B coloring
+            if (d.word === data.wordPair[0]) {
+              wordEl.classList.add('pill-a');
+            } else if (d.word === data.wordPair[1]) {
+              wordEl.classList.add('pill-b');
+            }
+          }
+          if (drawingPointsEl) drawingPointsEl.textContent = `+${d.drawPoints}`;
+          if (guessingPointsEl) guessingPointsEl.textContent = `+${d.guessPoints}`;
+          if (imgEl) imgEl.src = d.dataUrl || '';
+
+          if (guessesEl) {
+            if (d.guesses && d.guesses.length) {
+              guessesEl.innerHTML = d.guesses.map(g => `<span class="guess-tag ${g.correct ? 'guess-right' : 'guess-wrong'}">${g.correct ? '\u2713' : '\u2717'} ${esc(g.guesserName)}</span>`).join('');
+            } else {
+              guessesEl.innerHTML = '<span class="hint">No guesses submitted for drawing.</span>';
+            }
+          }
+
+          return card.outerHTML;
+        }).join('');
+
+        const leaderboardHtml = `
+          <div class="card">
+            <h2>Leaderboard</h2>
+            <ul class="player-list">${data.leaderboard.map(p => `<li><span>${esc(p.name)}</span><span class="player-score">${p.score}</span></li>`).join('')}</ul>
           </div>
-        `).join('')}
-        <div class="card">
-          <h2>Leaderboard</h2>
-          <ul class="player-list">${data.leaderboard.map(p => `<li><span>${esc(p.name)}</span><span class="player-score">${p.score}</span></li>`).join('')}</ul>
-        </div>
-        ${App.isHost
+        `;
+
+        const hostHtml = App.isHost
           ? `<button class="btn-primary" id="continueBtn">${data.isLastRound ? 'See Final Results' : 'Start Next Round'}</button>`
-          : `<div class="status-msg">Waiting for the host to continue...</div>`}
-      `;
+          : `<div class="status-msg">Waiting for the host to continue...</div>`;
+
+        revealDetails.innerHTML = cards + leaderboardHtml + hostHtml;
+
+        if (App.isHost) {
+          const continueBtn = document.getElementById('continueBtn');
+          if (continueBtn) {
+            continueBtn.onclick = () => {
+              const btn = continueBtn; btn.disabled = true; btn.textContent = 'Loading...';
+              socket.emit('continue-after-reveal');
+            };
+          }
+        }
+      }).catch(err => {
+        console.error('Failed loading score card template', err);
+        revealDetails.innerHTML = '<div class="status-msg">Tallying results...</div>';
+      });
     }
 
-    if (App.isHost) {
-      document.getElementById('continueBtn').onclick = () => {
-        const btn = document.getElementById('continueBtn'); btn.disabled = true; btn.textContent = 'Loading...';
-        socket.emit('continue-after-reveal');
-      };
-    }
+    // NOTE: host button handler moved into fetch handler above
+
   }
 
   function renderFinished() {
@@ -396,6 +463,7 @@
 
   socket.on('phase-reveal', (payload) => {
     App.revealData = payload;
+    console.log("App reveal data is " + JSON.stringify(payload));
     setScreen('reveal');
   });
 
