@@ -19,6 +19,15 @@
     finalLeaderboard: [],
   };
 
+  const boardState = {
+    canvasElement: null,
+    context: null,
+    strokes: [],
+    drawing: false,
+    location: null,
+    currentStroke: null,
+  };
+
   function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
   function setScreen(name) { App.screen = name; render(); }
   function showError(message) {
@@ -198,9 +207,8 @@
     const roundNumber = document.getElementById('drawRoundNumber');
     const totalRounds = document.getElementById('drawTotalRounds');
     const wordText = document.getElementById('drawWord');
-    const drawControls = document.getElementById('drawControls');
     const swatches = document.querySelectorAll('.swatch');
-    const clearBtn = document.getElementById('clearBtn');
+    const undoBtn = document.getElementById('undoBtn');
     const submitBtn = document.getElementById('submitDraw');
     const board = document.getElementById('board');
 
@@ -208,8 +216,15 @@
     if (totalRounds) totalRounds.textContent = String(r.rounds);
     if (wordText) wordText.textContent = r.word || '...';
 
+    if (board && !board.dataset.ready) {
+      setupCanvas();
+      board.dataset.ready = 'true';
+    }
+
     const previewActive = r.previewEndsAt && Date.now() < r.previewEndsAt;
-    if (drawControls) drawControls.hidden = previewActive;
+    if (boardState.canvasElement) {
+      boardState.canvasElement.style.display = previewActive ? 'none' : 'block';
+    }
     if (previewActive) {
       startLocalCountdown(r.previewEndsAt, 'timer', () => {
         renderDrawing();
@@ -227,55 +242,84 @@
       };
     });
 
-    if (clearBtn) {
-      clearBtn.onclick = () => {
-        const cv = document.getElementById('board');
-        if (!cv) return;
-        const ctx = cv.getContext('2d');
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0, 0, cv.width, cv.height);
-      };
+    if (undoBtn) {
+      undoBtn.onclick = undoBoardStroke;
     }
 
     if (submitBtn) {
       submitBtn.onclick = () => submitDrawing();
     }
 
-    if (board && !board.dataset.ready) {
-      setupCanvas();
-      board.dataset.ready = 'true';
-    }
-
     startLocalCountdown(r.phaseEndsAt, 'timer', () => { if (!App.drawSubmitted) submitDrawing(); });
   }
 
+  function redrawBoard() {
+    const { canvasElement: cv, context: ctx, strokes } = boardState;
+    if (!cv || !ctx) return;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    strokes.forEach(stroke => {
+      ctx.strokeStyle = stroke.color;
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      stroke.points.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+      ctx.stroke();
+    });
+  }
+
+  function undoBoardStroke() {
+    if (!boardState.strokes.length) return;
+    boardState.strokes.pop();
+    redrawBoard();
+  }
+
   function setupCanvas() {
-    const cv = document.getElementById('board');
-    const ctx = cv.getContext('2d');
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    boardState.canvasElement = canvas;
+    boardState.context = ctx;
+    boardState.strokes = [];
+    boardState.drawing = false;
+    boardState.location = null;
+    boardState.currentStroke = null;
+
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = 6;
-    let drawing = false, last = null;
+
     function pos(e) {
-      const rect = cv.getBoundingClientRect();
-      const scaleX = cv.width / rect.width, scaleY = cv.height / rect.height;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
       const p = e.touches ? e.touches[0] : e;
       return { x: (p.clientX - rect.left) * scaleX, y: (p.clientY - rect.top) * scaleY };
     }
-    function start(e) { e.preventDefault(); drawing = true; last = pos(e); }
-    function move(e) {
-      if (!drawing) return; e.preventDefault();
-      const p = pos(e);
-      ctx.strokeStyle = App.drawColor;
-      ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
-      last = p;
+    function start(e) {
+      e.preventDefault();
+      boardState.drawing = true;
+      boardState.location = pos(e);
+      boardState.currentStroke = { color: App.drawColor, points: [boardState.location] };
     }
-    function end() { drawing = false; }
-    cv.addEventListener('mousedown', start);
-    cv.addEventListener('mousemove', move);
+    function move(e) {
+      if (!boardState.drawing) return; e.preventDefault();
+      const p = pos(e);
+      ctx.strokeStyle = boardState.currentStroke.color;
+      ctx.beginPath(); ctx.moveTo(boardState.location.x, boardState.location.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      boardState.currentStroke.points.push(p);
+      boardState.location = p;
+    }
+    function end() {
+      if (boardState.drawing && boardState.currentStroke && boardState.currentStroke.points.length > 1) {
+        boardState.strokes.push(boardState.currentStroke);
+      }
+      boardState.drawing = false;
+      boardState.location = null;
+      boardState.currentStroke = null;
+    }
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
     window.addEventListener('mouseup', end);
-    cv.addEventListener('touchstart', start, { passive: false });
-    cv.addEventListener('touchmove', move, { passive: false });
-    cv.addEventListener('touchend', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
   }
 
   function submitDrawing() {
