@@ -357,9 +357,9 @@
       btn.onclick = () => {
         const t = btn.dataset.target, w = btn.dataset.word;
         App.catChoices[t] = w;
-        document.querySelectorAll(`.choice-btn[data-target="${t}"]`).forEach(b => b.classList.remove('sel-a', 'sel-b'));
+        document.querySelectorAll(`.choice-btn[data-target="${t}"]`).forEach(b => b.classList.remove('selected'));
         const isFirst = w === pair[0];
-        document.querySelectorAll(`.choice-btn[data-target="${t}"][data-word="${w}"]`).forEach(b => b.classList.add(isFirst ? 'sel-a' : 'sel-b'));
+        document.querySelectorAll(`.choice-btn[data-target="${t}"][data-word="${w}"]`).forEach(b => b.classList.add('selected'));
       };
     });
     document.getElementById('submitCat').onclick = () => submitCategorization();
