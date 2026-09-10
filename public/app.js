@@ -1,6 +1,7 @@
 (function () {
   const socket = io();
   const root = document.getElementById('app');
+  const reconnectStorageKey = 'monot-reconnect';
 
   const App = {
     screen: 'home',
@@ -99,6 +100,11 @@
         const button = document.getElementById('createBtn');
         button.disabled = true;
         button.textContent = 'Creating...';
+        localStorage.setItem(reconnectStorageKey, JSON.stringify({
+          code: gameCode,
+          name,
+          reconnectToken: getReconnectSession()?.reconnectToken || null,
+        }));
         socket.emit('host-game', { gameCode, name, rounds, roundSeconds, catSeconds, difficulty });
       };
       document.querySelectorAll('[data-view]').forEach(button => {
@@ -117,7 +123,12 @@
         const button = document.getElementById('joinConfirm');
         button.disabled = true;
         button.textContent = 'Joining...';
-        socket.emit('join-game', { code, name });
+        localStorage.setItem(reconnectStorageKey, JSON.stringify({
+          code,
+          name,
+          reconnectToken: getReconnectSession()?.reconnectToken || null,
+        }));
+        socket.emit('join-game', { code, name, reconnectToken: getReconnectSession()?.reconnectToken });
       };
       document.querySelectorAll('[data-view]').forEach(button => {
         button.onclick = () => setScreen(button.dataset.view);
@@ -476,11 +487,16 @@
   }
 
   // ---------------- socket events ----------------
-  socket.on('game-joined', ({ code, playerId, isHost, config }) => {
+  function getReconnectSession() {
+    try { return JSON.parse(localStorage.getItem(reconnectStorageKey)); } catch { return null; }
+  }
+
+  socket.on('game-joined', ({ code, playerId, isHost, config, reconnectToken }) => {
     App.code = code; 
     App.playerId = playerId; 
     App.isHost = isHost;
     App.config = config;
+    localStorage.setItem(reconnectStorageKey, JSON.stringify({ code, name: getReconnectSession()?.name || '', reconnectToken }));
     setScreen('lobby');
   });
   socket.on('join-error', ({ message }) => {
@@ -525,6 +541,12 @@
   socket.on('disconnect', () => {
     App.errorMsg = 'Lost connection to the server. Refresh to try rejoining.';
     showError(App.errorMsg);
+  });
+
+  socket.on('connect', () => {
+    const session = getReconnectSession();
+    if (!session || !session.code || !session.name) return;
+    socket.emit('join-game', session);
   });
 
  function initializePage() {

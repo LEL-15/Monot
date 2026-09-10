@@ -1,5 +1,6 @@
 const EASY_WORDS = require('./easyWordPairs');
 const HARD_WORDS = require('./hardWordPairs');
+const { randomUUID } = require('crypto');
 
 // All active games live in memory, keyed by 4-letter room code.
 // This is intentional: games are short-lived and don't need a database.
@@ -29,7 +30,7 @@ function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, 
     difficulty,
     currentRound: 0,
     roundWords,
-    players: new Map(), // playerId -> { id, name, score }
+    players: new Map(), // playerId -> { id, name, score, socketId, reconnectToken, disconnectedAt }
     assignments: {},    // round -> { playerId: word }
     drawings: {},       // round -> { playerId: { word, dataUrl } }
     categorizations: {},// round -> { playerId: { guesses: { targetId: word } } }
@@ -37,7 +38,16 @@ function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, 
     timer: null,
     phaseEndsAt: null,
   };
-  room.players.set(hostId, { id: hostId, name: hostName, score: 0 });
+  const hostPlayerId = randomUUID();
+  room.hostId = hostPlayerId;
+  room.players.set(hostPlayerId, {
+    id: hostPlayerId,
+    name: hostName,
+    score: 0,
+    socketId: hostId,
+    reconnectToken: randomUUID(),
+    disconnectedAt: null
+  });
   rooms.set(code, room);
   return room;
 }
@@ -53,11 +63,35 @@ function deleteRoom(code) {
 }
 
 function addPlayer(room, playerId, name) {
-  room.players.set(playerId, { id: playerId, name, score: 0 });
+  const stablePlayerId = randomUUID();
+  const player = { id: stablePlayerId, name, score: 0, socketId: playerId, reconnectToken: randomUUID(), disconnectedAt: null };
+  room.players.set(stablePlayerId, player);
+  return player;
 }
 
 function removePlayer(room, playerId) {
   room.players.delete(playerId);
+}
+
+function markPlayerDisconnected(room, playerId) {
+  const player = room.players.get(playerId);
+  if (player) {
+    player.disconnectedAt = Date.now();
+    player.socketId = null;
+  }
+  return player;
+}
+
+function rebindPlayer(room, socketId, reconnectToken) {
+  const match = Array.from(room.players.values()).find(player =>
+    player.disconnectedAt && player.reconnectToken === reconnectToken
+  );
+  if (!match) return null;
+
+  const player = match;
+  player.socketId = socketId;
+  player.disconnectedAt = null;
+  return player;
 }
 
 function lobbyPlayers(room) {
@@ -137,6 +171,8 @@ module.exports = {
   deleteRoom,
   addPlayer,
   removePlayer,
+  markPlayerDisconnected,
+  rebindPlayer,
   lobbyPlayers,
   leaderboard,
   assignWordsForRound,
