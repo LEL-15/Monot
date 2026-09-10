@@ -62,8 +62,7 @@ h1,h2,h3{ display: inline }
 .card h2{ font-size:1.3rem; margin-bottom: 14px; }
 .row{ display:flex; gap:10px; }
 .row > *{ flex:1; }
-label{ display:block; font-size:0.8rem; color:var(--ink); margin: 12px 0 6px; font-weight:600; }
-label:first-child{ margin-top:0; }
+label{ display:block; font-size:1rem; color:var(--ink); margin: 12px 0 6px; font-weight:600; }
 
 /* Buttons */
 button{
@@ -72,9 +71,9 @@ button{
 }
 button:active{ transform: scale(0.97); }
 button:disabled{ opacity:0.4; cursor:not-allowed; }
-.btn-primary{ background: var(--wordB); color:var(--ink); width:100%; margin-top:16px; }
-button[type="submit"] { background: var(--success); color:var(--ink); width:100%; margin-top:16px; }
-.btn-ghost{ background: var(--wordA); color: var(--text); border:1px solid var(--line); width:100%; margin-top:10px; }
+.btn-primary{ background: var(--gold); color:var(--ink-dim); width:100%; margin-top:16px; }
+button[type="submit"] { background: var(--gold); color:var(--ink-dim); width:100%; margin-top:16px; }
+.btn-ghost{ background: var(--wordA); color: var(--ink-dim); border:1px solid var(--line); width:100%; margin-top:10px; }
 .page-button{ display:block; text-align:center; text-decoration:none; }
 .pill{ display:inline-block; padding: 4px 12px; border-radius: 999px; font-weight:700; font-size:0.85rem; }
 .pill-a{ background: var(--wordA); color: var(--wordA-ink); }
