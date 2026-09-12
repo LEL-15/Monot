@@ -15,7 +15,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
-const RECONNECT_GRACE_MS = 2 * 60 * 1000;
+const RECONNECT_GRACE_MS = 1 * 60 * 1000;
 
 function clampInt(val, min, max, fallback) {
   const n = parseInt(val, 10);
@@ -163,9 +163,14 @@ io.on('connection', (socket) => {
   socket.data.code = null;
 
   socket.on('host-game', ({ gameCode, name, rounds, roundSeconds, catSeconds, difficulty }) => {
+    const cleanGameCode = (gameCode || '').toString().trim().toUpperCase();
+    if (!cleanGameCode) return socket.emit('game-error', { message: 'Enter a game code.' });
+    if (rooms.getRoom(cleanGameCode)) {
+      return socket.emit('game-error', { message: 'That game code is already in use.' });
+    }
     const cleanName = (name || 'Host').toString().trim().slice(0, 18) || 'Host';
     const room = rooms.createRoom({
-      code: gameCode,
+      code: cleanGameCode,
       hostId: socket.id,
       hostName: cleanName,
       rounds: clampInt(rounds, 1, 10, 3),
@@ -212,6 +217,29 @@ io.on('connection', (socket) => {
     startDrawingPhase(room, 1);
   });
 
+  socket.on('leave-game', () => {
+    const room = rooms.getRoom(socket.data.code);
+    if (!room || !['lobby', 'finished'].includes(room.phase)) return;
+
+    if (room.phase === 'lobby' && room.hostId === socket.data.playerId) {
+      io.to(room.code).emit('game-closed', { message: 'The host left the game.' });
+      rooms.deleteRoom(room.code);
+      return;
+    }
+
+    rooms.removePlayer(room, socket.data.playerId);
+    socket.leave(room.code);
+    socket.data.code = null;
+    socket.data.playerId = null;
+    socket.data.reconnectToken = null;
+    if (room.players.size === 0) {
+      rooms.deleteRoom(room.code);
+    } else if (room.phase === 'lobby') {
+      io.to(room.code).emit('lobby-update', { players: rooms.lobbyPlayers(room) });
+    }
+    socket.emit('game-left');
+  });
+
   socket.on('submit-drawing', ({ dataUrl }) => {
     const room = rooms.getRoom(socket.data.code);
     if (!room || room.phase !== 'drawing') return;
@@ -245,6 +273,8 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const room = rooms.getRoom(socket.data.code);
     if (!room) return;
+    const currentPlayer = room.players.get(socket.data.playerId);
+    if (!currentPlayer || currentPlayer.socketId !== socket.id) return;
     const player = rooms.markPlayerDisconnected(room, socket.data.playerId);
     if (!player) return;
     setTimeout(() => {

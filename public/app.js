@@ -1,7 +1,8 @@
 (function () {
   const socket = io();
   const root = document.getElementById('app');
-  const reconnectStorageKey = 'monot-reconnect';
+  const RECONNECT_KEY = 'monot-reconnect';
+  const PROFILE_KEY = 'monot-profile';
 
   const App = {
     screen: 'home',
@@ -89,6 +90,7 @@
     }
 
     if (viewName === 'host') {
+      prefillProfile();
       document.getElementById('hostForm').onsubmit = (event) => {
         event.preventDefault();
         const name = document.getElementById('name').value.trim() || 'Host';
@@ -100,7 +102,8 @@
         const button = document.getElementById('createBtn');
         button.disabled = true;
         button.textContent = 'Creating...';
-        localStorage.setItem(reconnectStorageKey, JSON.stringify({
+        saveProfile(name, gameCode, { rounds, roundSeconds, catSeconds, difficulty });
+        localStorage.setItem(RECONNECT_KEY, JSON.stringify({
           code: gameCode,
           name,
           reconnectToken: getReconnectSession()?.reconnectToken || null,
@@ -114,6 +117,7 @@
     }
 
     if (viewName === 'join') {
+      prefillProfile();
       document.getElementById('joinForm').onsubmit = (event) => {
         event.preventDefault();
         const code = document.getElementById('gameCode').value.trim().toUpperCase();
@@ -123,7 +127,8 @@
         const button = document.getElementById('joinConfirm');
         button.disabled = true;
         button.textContent = 'Joining...';
-        localStorage.setItem(reconnectStorageKey, JSON.stringify({
+        saveProfile(name, code);
+        localStorage.setItem(RECONNECT_KEY, JSON.stringify({
           code,
           name,
           reconnectToken: getReconnectSession()?.reconnectToken || null,
@@ -179,7 +184,7 @@
     if (lobbyActions) {
       lobbyActions.innerHTML = App.isHost
         ? `<button class="btn-primary" id="startBtn" ${players.length < 2 ? 'disabled' : ''}>${players.length < 2 ? 'Need at least 2 players' : 'Start Game'}</button>`
-        : `<div class="status-msg">Waiting for the host to start the game...</div>`;
+        : '<div class="status-msg">Waiting for the host to start the game...</div>';
     }
 
     const startBtn = document.getElementById('startBtn');
@@ -189,6 +194,15 @@
       startBtn.onclick = () => {
         const btn = document.getElementById('startBtn'); btn.disabled = true; btn.textContent = 'Starting...';
         socket.emit('start-game');
+      };
+    }
+
+    const leaveBtn = document.getElementById('leaveBtn');
+    if (leaveBtn) {
+      leaveBtn.onclick = () => {
+        leaveBtn.disabled = true;
+        leaveBtn.textContent = 'Leaving...';
+        socket.emit('leave-game');
       };
     }
 
@@ -479,16 +493,42 @@
       ).join('');
 
       fadeCover();
-      document.getElementById('newGameBtn').onclick = () => { window.location.reload(); };
+      document.getElementById('newGameBtn').onclick = (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        button.textContent = 'Leaving...';
+        socket.emit('leave-game');
+      };
     }).catch(err => {
       console.error('Failed loading finished view', err);
       root.innerHTML = '<div class="status-msg">Unable to load final results.</div>';
     });
   }
 
+  // ---------------- player profile logic ----------------
+  function getStoredProfile() {
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch { return null; }
+  }
+
+  function prefillProfile() {
+    const profile = getStoredProfile();
+    if (!profile) return;
+    document.getElementById('name').value = profile.name || '';
+    document.getElementById('gameCode').value = profile.code || '';
+    if (document.getElementById('rounds') && profile.rounds) document.getElementById('rounds').value = profile.rounds;
+    if (document.getElementById('roundSeconds') && profile.roundSeconds) document.getElementById('roundSeconds').value = profile.roundSeconds;
+    if (document.getElementById('catSeconds') && profile.catSeconds) document.getElementById('catSeconds').value = profile.catSeconds;
+    if (document.getElementById('difficulty') && profile.difficulty) document.getElementById('difficulty').value = profile.difficulty;
+  }
+
+  function saveProfile(name, code, settings = {}) {
+    const profile = getStoredProfile() || {};
+    localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...profile, name, code, ...settings }));
+  }
+
   // ---------------- socket events ----------------
   function getReconnectSession() {
-    try { return JSON.parse(localStorage.getItem(reconnectStorageKey)); } catch { return null; }
+    try { return JSON.parse(localStorage.getItem(RECONNECT_KEY)); } catch { return null; }
   }
 
   socket.on('game-joined', ({ code, playerId, isHost, config, reconnectToken }) => {
@@ -496,7 +536,8 @@
     App.playerId = playerId; 
     App.isHost = isHost;
     App.config = config;
-    localStorage.setItem(reconnectStorageKey, JSON.stringify({ code, name: getReconnectSession()?.name || '', reconnectToken }));
+    saveProfile(getStoredProfile()?.name || '', code);
+    localStorage.setItem(RECONNECT_KEY, JSON.stringify({ code, name: getReconnectSession()?.name || '', reconnectToken }));
     setScreen('lobby');
   });
   socket.on('join-error', ({ message }) => {
@@ -506,7 +547,23 @@
     showError(message);
   });
 
-  socket.on('game-error', ({ message }) => { App.errorMsg = message; showError(message); });
+  socket.on('game-error', ({ message }) => {
+    App.errorMsg = message;
+    const button = document.getElementById('createBtn');
+    if (button) { button.disabled = false; button.textContent = 'Create Game'; }
+    showError(message);
+  });
+
+  function returnToHome() {
+    localStorage.removeItem(RECONNECT_KEY);
+    App.code = null;
+    App.playerId = null;
+    App.isHost = false;
+    setScreen('home');
+  }
+
+  socket.on('game-left', returnToHome);
+  socket.on('game-closed', returnToHome);
 
   socket.on('lobby-update', ({ players }) => {
     App.lobbyPlayers = players;

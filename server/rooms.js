@@ -84,7 +84,7 @@ function markPlayerDisconnected(room, playerId) {
 
 function rebindPlayer(room, socketId, reconnectToken) {
   const match = Array.from(room.players.values()).find(player =>
-    player.disconnectedAt && player.reconnectToken === reconnectToken
+    player.reconnectToken === reconnectToken
   );
   if (!match) return null;
 

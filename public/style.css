@@ -60,8 +60,9 @@ h1,h2,h3{ display: inline }
 /* Cards */
 .card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 16px; }
 .card h2{ font-size:1.3rem; margin-bottom: 14px; }
-.row{ display:flex; gap:10px; }
-.row > *{ flex:1; }
+.row{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+.row > div{ min-width:0; }
+.row > div label{ min-height:2.4em; display:flex; align-items:flex-end; }
 label{ display:block; font-size:1rem; color:var(--ink); margin: 12px 0 6px; font-weight:600; }
 
 /* Buttons */
