@@ -250,12 +250,6 @@
     if (boardState.canvasElement) {
       boardState.canvasElement.style.display = previewActive ? 'none' : 'block';
     }
-    if (previewActive) {
-      startLocalCountdown(r.previewEndsAt, 'timer', () => {
-        renderDrawing();
-      });
-      return;
-    }
 
     swatches.forEach(sw => {
       const isActive = sw.dataset.color === App.drawColor;
@@ -266,6 +260,13 @@
         sw.classList.add('active');
       };
     });
+
+    if (previewActive) {
+      startLocalCountdown(r.previewEndsAt, 'timer', () => {
+        renderDrawing();
+      });
+      return;
+    }
 
     if (undoBtn) {
       undoBtn.onclick = undoBoardStroke;

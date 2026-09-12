@@ -253,7 +253,6 @@ module.exports = [
   ["Donkey", "Mule"],
   ["Sheep", "Alpaca"],
   ["Rooster", "Turkey"],
-  ["Hawk", "Falcon"],
   ["Robin", "Sparrow"],
   ["Crow", "Raven"],
   ["Seagull", "Albatross"],
@@ -333,8 +332,4 @@ module.exports = [
   ["Call", "Phone"],
   ["Type", "Keyboard"],
   ["Print", "Printer"],
-  ["Slice", "Sliver"],
-  ["Plant", "Seed"],
-  ["Pick", "Flower"],
-  ["Build", "Brick"],
 ];
