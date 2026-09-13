@@ -3,6 +3,7 @@
   const root = document.getElementById('app');
   const RECONNECT_KEY = 'monot-reconnect';
   const PROFILE_KEY = 'monot-profile';
+  const victoryAudio = new Audio('/sounds/victory.mp3');
 
   const App = {
     screen: 'home',
@@ -19,6 +20,7 @@
     lobbyPlayers: [],
     revealData: null,
     finalLeaderboard: [],
+    victoryPlayed: false,
   };
 
   const boardState = {
@@ -586,6 +588,7 @@
   socket.on('game-restarted', ({ config, players }) => {
     App.config = config;
     App.lobbyPlayers = players;
+    App.victoryPlayed = false;
     setScreen('lobby');
   });
 
@@ -611,8 +614,19 @@
 
   socket.on('phase-finished', (payload) => {
     App.finalLeaderboard = payload.leaderboard;
+    const topScore = payload.leaderboard.length ? payload.leaderboard[0].score : null;
+    const isWinner = payload.leaderboard.some(player => player.id === App.playerId && player.score === topScore);
+    if (isWinner && !App.victoryPlayed) {
+      App.victoryPlayed = true;
+      playVictorySound();
+    }
     setScreen('finished');
   });
+  
+  function playVictorySound() {
+    victoryAudio.currentTime = 0;
+    victoryAudio.play().catch(() => {});
+  }
 
   socket.on('disconnect', () => {
     App.errorMsg = 'Lost connection to the server. Refresh to try rejoining.';
