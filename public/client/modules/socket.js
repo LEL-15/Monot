@@ -1,0 +1,97 @@
+import { clearReconnectSession, getReconnectSession, saveProfile, saveReconnectSession } from './storage.js';
+import { playVictorySound } from './audio.js';
+
+export function bindSocketEvents({ socket, App, setScreen, renderLobby, showError }) {
+  
+  socket.on('game-joined', ({ code, playerId, isHost, config, reconnectToken }) => {
+    App.code = code;
+    App.playerId = playerId;
+    App.isHost = isHost;
+    App.config = config;
+    saveProfile(getReconnectSession()?.name || '', code);
+    saveReconnectSession({ code, name: getReconnectSession()?.name || '', reconnectToken });
+    setScreen('lobby');
+  });
+
+  
+  socket.on('join-error', ({ message }) => {
+    const button = document.getElementById('joinConfirm');
+    if (button) { button.disabled = false; button.textContent = 'Join Game'; }
+    showError(message);
+  });
+
+  
+  socket.on('game-error', ({ message }) => {
+    const button = document.getElementById('createBtn');
+    if (button) { button.disabled = false; button.textContent = 'Create Game'; }
+    showError(message);
+  });
+
+  
+  socket.on('game-left', () => {
+    clearReconnectSession();
+    App.code = null;
+    App.playerId = null;
+    App.isHost = false;
+    setScreen('home');
+  });
+  
+  socket.on('game-closed', () => {
+    clearReconnectSession();
+    App.code = null;
+    App.playerId = null;
+    App.isHost = false;
+    setScreen('home');
+  });
+
+  
+  socket.on('lobby-update', ({ players }) => {
+    App.lobbyPlayers = players;
+    if (App.screen === 'lobby') renderLobby();
+  });
+  
+  socket.on('game-restarted', ({ config, players }) => {
+    App.config = config;
+    App.lobbyPlayers = players;
+    App.victoryPlayed = false;
+    setScreen('lobby');
+  });
+  
+  socket.on('phase-drawing', payload => {
+    App.round = payload;
+    App.drawSubmitted = false;
+    App.catSubmitted = false;
+    App.catChoices = {};
+    setScreen('drawing');
+  });
+  
+  socket.on('phase-categorizing', payload => {
+    App.round = Object.assign({}, App.round, payload);
+    App.catSubmitted = false;
+    App.catChoices = {};
+    setScreen('categorizing');
+  });
+  
+  socket.on('phase-reveal', payload => {
+    App.revealData = payload;
+    setScreen('reveal');
+  });
+  
+  socket.on('phase-finished', payload => {
+    App.finalLeaderboard = payload.leaderboard;
+    const topScore = payload.leaderboard.length ? payload.leaderboard[0].score : null;
+    const isWinner = payload.leaderboard.some(player => player.id === App.playerId && player.score === topScore);
+    if (isWinner && !App.victoryPlayed) {
+      App.victoryPlayed = true;
+      playVictorySound();
+    }
+    setScreen('finished');
+  });
+  
+  socket.on('disconnect', () => showError('Lost connection to the server. Refresh to try rejoining.'));
+  
+  socket.on('connect', () => {
+    const session = getReconnectSession();
+    if (session && session.code && session.name) socket.emit('join-game', session);
+  });
+}

@@ -285,7 +285,7 @@ module.exports = [
   ["Sail", "Row"],
   ["Fly", "Glide"],
   ["Dig", "Plant"],
-  ["Pour", "Drink"],
+  ["Pour", "Pitcher"],
   ["Bake", "Fry"],
   ["Kick", "Punt"],
   ["Spin", "Twirl"],
