@@ -30,4 +30,5 @@ export function prefillProfile() {
   if (document.getElementById('roundSeconds') && profile.roundSeconds > 0) document.getElementById('roundSeconds').value = profile.roundSeconds;
   if (document.getElementById('catSeconds') && profile.catSeconds > 0) document.getElementById('catSeconds').value = profile.catSeconds;
   if (document.getElementById('difficulty') && profile.difficulty) document.getElementById('difficulty').value = profile.difficulty;
+  if (document.getElementById('hiddenWords') && profile.hiddenWords != null) document.getElementById('hiddenWords').checked = profile.hiddenWords;
 }

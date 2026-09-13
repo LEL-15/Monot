@@ -16,7 +16,7 @@ function shuffled(arr) {
   return a;
 }
 
-function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, difficulty }) {
+function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, difficulty, hiddenWords }) {
   let words;
   switch (difficulty) {
     case 'Hard':
@@ -43,6 +43,7 @@ function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, 
     roundSeconds,
     catSeconds,
     difficulty,
+    hiddenWords: Boolean(hiddenWords),
     currentRound: 0,
     roundWords,
     players: new Map(), // playerId -> { id, name, score, socketId, reconnectToken, disconnectedAt }

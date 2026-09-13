@@ -86,6 +86,7 @@ button[type="submit"] { background: var(--gold); color:var(--ink-dim); width:100
 .player-list li:last-child{ border-bottom:none; }
 .player-score{ color: var(--gold); font-weight:700; font-family:'Fredoka',sans-serif; }
 .word-banner{ text-align:center; font-family:'Fredoka',sans-serif; font-size:1.7rem; margin: 4px 0 14px; padding: 14px; border-radius: 12px; }
+.banner{ font-family:'Fredoka',sans-serif; margin: 4px 0 14px; padding: 14px; border-radius: 12px; }
 .timer{ text-align:center; font-family:'Fredoka',sans-serif; font-size:1.1rem; color:var(--ink-dim); margin-bottom:10px; }
 .timer.low{ color:var(--failure); }
 canvas{ display:block; width:100%; max-width: 480px; margin: 0 auto; background:#fff; border-radius: 12px; touch-action:none; cursor:crosshair; }
@@ -99,12 +100,11 @@ canvas{ display:block; width:100%; max-width: 480px; margin: 0 auto; background:
 .choice-btn{ flex:1; padding: 12px; border-radius:10px; font-family:'Fredoka',sans-serif; font-weight:600; border:2px solid var(--line); background:var(--panel); color:var(--ink); }
 .choice-btn.selected{ background:var(--gold); color:var(--text); border-color:var(--text); }
 .status-msg{ text-align:center; color:var(--ink-dim); padding: 30px 10px; }
-.reveal-item{ background:var(--panel2); border-radius:14px; padding:14px; margin-bottom:14px; }
 .reveal-item img{ width:100%; max-width:280px; display:block; margin:8px auto; border-radius:10px; background:#fff; }
 .guess-tag{ display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:0.8rem; margin:3px 3px 0 0; font-weight:600; }
 .guess-right{ background: var(--success); color: var(--text); }
 .guess-wrong{ background: var(--failure); color: var(--text); }
-.points-badge{ float:right; background:var(--success); color:var(--text); padding:3px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; font-family:'Fredoka',sans-serif; }
+.points-badge{ float:right; background:var(--gold); color:var(--text); padding:3px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; font-family:'Fredoka',sans-serif; }
 .trophy{ font-size:3.4rem; text-align:center; margin-bottom:6px; }
 .winner-name{ text-align:center; font-family:'Fredoka',sans-serif; font-size:1.8rem; color:var(--gold); margin-bottom: 4px; }
 .final-list li.win{ color: var(--gold); }

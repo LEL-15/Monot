@@ -29,15 +29,16 @@ export function renderReveal({ App, root, socket, esc }) {
       if (guessingPoints) guessingPoints.textContent = `+${detail.guessPoints}`;
       if (image) image.src = detail.dataUrl || '';
       if (guesses) guesses.innerHTML = detail.guesses && detail.guesses.length
-        ? detail.guesses.map(guess => `<span class="guess-tag ${guess.correct ? 'guess-right' : 'guess-wrong'}">${guess.correct ? '\\u2713' : '\\u2717'} ${esc(guess.guesserName)}</span>`).join('')
+        ? detail.guesses.map(guess => `<span class="guess-tag ${guess.correct ? 'guess-right' : 'guess-wrong'}">${guess.correct ? '\u2713' : '\u2717'} ${esc(guess.guesserName)}</span>`).join('')
         : '<span class="hint">No guesses submitted for drawing.</span>';
       return card.outerHTML;
     }).join('');
+    const wordPair = `<div class="banner" style="text-align:left;"><h3>Possible words:</h3> <span class="pill pill-a">${esc(data.wordPair[0])}</span> <span class="pill pill-b">${esc(data.wordPair[1])}</span></div>`;
     const leaderboard = `<div class="card"><h2>Leaderboard</h2><ul class="player-list">${data.leaderboard.map(player => `<li><span>${esc(player.name)}</span><span class="player-score">${player.score}</span></li>`).join('')}</ul></div>`;
     const hostAction = App.isHost
       ? `<button class="btn-primary" id="continueBtn">${data.isLastRound ? 'See Final Results' : 'Start Next Round'}</button>`
       : '<div class="status-msg">Waiting for the host to continue...</div>';
-    revealDetails.innerHTML = cards + leaderboard + hostAction;
+    revealDetails.innerHTML = wordPair + cards + leaderboard + hostAction;
     if (App.isHost) {
       const continueButton = document.getElementById('continueBtn');
       if (continueButton) continueButton.onclick = () => {

@@ -92,12 +92,13 @@ async function loadView(viewName) {
       const roundSeconds = parseInt(document.getElementById('roundSeconds').value, 10) || 60;
       const catSeconds = parseInt(document.getElementById('catSeconds').value, 10) || 30;
       const difficulty = document.getElementById('difficulty').value || 'easy';
+      const hiddenWords = document.getElementById('hiddenWords').checked;
       const button = document.getElementById('createBtn');
       button.disabled = true;
       button.textContent = 'Creating...';
-      saveProfile(name, gameCode, { rounds, roundSeconds, catSeconds, difficulty });
+      saveProfile(name, gameCode, { rounds, roundSeconds, catSeconds, difficulty, hiddenWords });
       saveReconnectSession({ code: gameCode, name, reconnectToken: getReconnectSession()?.reconnectToken || null });
-      socket.emit('host-game', { gameCode, name, rounds, roundSeconds, catSeconds, difficulty });
+      socket.emit('host-game', { gameCode, name, rounds, roundSeconds, catSeconds, difficulty, hiddenWords });
     };
     bindNavigationButtons();
     return;
@@ -148,6 +149,7 @@ function renderLobby() {
   const roundSeconds = document.getElementById('roundSeconds');
   const catSeconds = document.getElementById('catSeconds');
   const difficulty = document.getElementById('difficulty');
+  const hiddenWords = document.getElementById('hiddenWords');
   const count = document.getElementById('lobbyPlayerCount');
   const list = document.getElementById('lobbyPlayerList');
   const actions = document.getElementById('lobbyActions');
@@ -157,6 +159,7 @@ function renderLobby() {
   if (roundSeconds) roundSeconds.textContent = String(App.config.roundSeconds);
   if (catSeconds) catSeconds.textContent = String(App.config.catSeconds);
   if (difficulty) difficulty.textContent = App.config.difficulty;
+  if (hiddenWords) hiddenWords.textContent = App.config.hiddenWords ? 'Yes' : 'No';
   if (count) count.textContent = String(players.length);
   if (list) list.innerHTML = players.map(player => `<li>${esc(player.name)}</li>`).join('') || '<li>Waiting for players...</li>';
   if (actions) {

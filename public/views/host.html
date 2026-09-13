@@ -11,12 +11,13 @@
             <div><label for="roundSeconds">Draw time (sec)</label><input type="number" id="roundSeconds" value="15" min="5" max="180" /></div>
             <div><label for="catSeconds">Sort time (sec)</label><input type="number" id="catSeconds" value="60" min="5" max="120" /></div>
         </div>
-        <label for="difficulty">Difficulty</label>
+        <label for="difficulty">Word Pairing Difficulty</label>
         <select name="difficulty" id="difficulty">
             <option value="Easy">Easy</option>
             <option value="Medium">Medium</option>
             <option value="Hard" selected>Hard</option>
         </select>
+        <label><input type="checkbox" id="hiddenWords" checked /> Hidden Words</label>
 
         <button id="createBtn" type="submit">Create Game</button>
     </form>

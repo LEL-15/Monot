@@ -62,12 +62,16 @@ function startCategorizingPhase(room) {
     dataUrl: drawings[drawerId].dataUrl,
   }));
 
-  io.to(room.code).emit('phase-categorizing', {
-    round: roundIdx,
-    rounds: room.rounds,
-    wordPair: room.roundWords[roundIdx - 1],
-    drawings: drawingList,
-    phaseEndsAt: room.phaseEndsAt,
+  room.players.forEach(player => {
+    if (!player.socketId) return;
+    io.to(player.socketId).emit('phase-categorizing', {
+      round: roundIdx,
+      rounds: room.rounds,
+      word: room.assignments[roundIdx][player.id],
+      wordPair: room.roundWords[roundIdx - 1],
+      drawings: drawingList,
+      phaseEndsAt: room.phaseEndsAt,
+    });
   });
 
   room.timer = setTimeout(() => finishCategorizing(room), room.catSeconds * 1000);
@@ -101,7 +105,8 @@ function gameConfig(room) {
     rounds: room.rounds,
     roundSeconds: room.roundSeconds,
     catSeconds: room.catSeconds,
-    difficulty: room.difficulty
+    difficulty: room.difficulty,
+    hiddenWords: room.hiddenWords
   };
 }
 
@@ -122,8 +127,12 @@ function sendCurrentPhase(socket, room) {
     socket.emit('phase-categorizing', {
       round: room.currentRound,
       rounds: room.rounds,
+      word: room.assignments[room.currentRound][socket.data.playerId],
       wordPair: room.roundWords[room.currentRound - 1],
-      drawings: Object.keys(drawings).map(drawerId => ({ drawerId, dataUrl: drawings[drawerId].dataUrl })),
+      drawings: Object.keys(drawings).map(drawerId => ({
+        drawerId,
+        dataUrl: drawings[drawerId].dataUrl,
+      })),
       phaseEndsAt: room.phaseEndsAt,
     });
   } else if (room.phase === 'reveal') {
@@ -162,7 +171,7 @@ function checkAllCategorized(room) {
 io.on('connection', (socket) => {
   socket.data.code = null;
 
-  socket.on('host-game', ({ gameCode, name, rounds, roundSeconds, catSeconds, difficulty }) => {
+  socket.on('host-game', ({ gameCode, name, rounds, roundSeconds, catSeconds, difficulty, hiddenWords }) => {
     const cleanGameCode = (gameCode || '').toString().trim().toUpperCase();
     if (!cleanGameCode) return socket.emit('game-error', { message: 'Enter a game code.' });
     if (rooms.getRoom(cleanGameCode)) {
@@ -176,7 +185,8 @@ io.on('connection', (socket) => {
       rounds: clampInt(rounds, 1, 10, 3),
       roundSeconds: clampInt(roundSeconds, 15, 180, 60),
       catSeconds: clampInt(catSeconds, 10, 120, 30),
-      difficulty
+      difficulty,
+      hiddenWords
     });
     socket.data.code = room.code;
     const player = room.players.get(room.hostId);
