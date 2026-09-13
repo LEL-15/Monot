@@ -13,6 +13,7 @@ server/
   index.js           socket.io event wiring + phase timers (the game "referee")
   rooms.js           room/game state, scoring logic
   easyWordPairs.js   the word pairs used in easy game
+   mediumWordPairs.js the word pairs used in a medium game
   hardWordPairs.js   the word pairs used in a hard game
 public/
   index.html     page shell

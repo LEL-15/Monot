@@ -1,4 +1,5 @@
 const EASY_WORDS = require('./easyWordPairs');
+const MEDIUM_WORDS = require('./mediumWordPairs');
 const HARD_WORDS = require('./hardWordPairs');
 const { randomUUID } = require('crypto');
 
@@ -16,7 +17,21 @@ function shuffled(arr) {
 }
 
 function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, difficulty }) {
-  const pairsPool = shuffled(difficulty === 'Hard' ? HARD_WORDS : EASY_WORDS);
+  let words;
+  switch (difficulty) {
+    case 'Hard':
+      words = HARD_WORDS;
+      break;
+    case 'Medium':
+      words = MEDIUM_WORDS;
+      break;
+    case 'Easy':
+      words = EASY_WORDS;
+      break;
+    default:
+      throw new Error(`Invalid difficulty: ${difficulty}`);
+  }
+  const pairsPool = shuffled(words);
   const roundWords = [];
   for (let i = 0; i < rounds; i++) roundWords.push(pairsPool[i % pairsPool.length]);
 
