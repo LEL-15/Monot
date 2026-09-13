@@ -494,6 +494,18 @@
       ).join('');
 
       fadeCover();
+      const playAgainBtn = document.getElementById('playAgainBtn');
+      if (playAgainBtn) {
+        if (!App.isHost) {
+          playAgainBtn.remove();
+        } else {
+          playAgainBtn.onclick = () => {
+            playAgainBtn.disabled = true;
+            playAgainBtn.textContent = 'Starting...';
+            socket.emit('play-again');
+          };
+        }
+      }
       document.getElementById('newGameBtn').onclick = (event) => {
         const button = event.currentTarget;
         button.disabled = true;
@@ -569,6 +581,12 @@
   socket.on('lobby-update', ({ players }) => {
     App.lobbyPlayers = players;
     if (App.screen === 'lobby') renderLobby();
+  });
+
+  socket.on('game-restarted', ({ config, players }) => {
+    App.config = config;
+    App.lobbyPlayers = players;
+    setScreen('lobby');
   });
 
   socket.on('phase-drawing', (payload) => {

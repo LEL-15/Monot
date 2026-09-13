@@ -270,6 +270,24 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('play-again', () => {
+    const room = rooms.getRoom(socket.data.code);
+    if (!room || room.hostId !== socket.data.playerId || room.phase !== 'finished') return;
+
+    room.players.forEach(player => { player.score = 0; });
+    room.phase = 'lobby';
+    room.currentRound = 0;
+    room.phaseEndsAt = null;
+    room.assignments = {};
+    room.drawings = {};
+    room.categorizations = {};
+    room.results = {};
+    io.to(room.code).emit('game-restarted', {
+      config: gameConfig(room),
+      players: rooms.lobbyPlayers(room),
+    });
+  });
+
   socket.on('disconnect', () => {
     const room = rooms.getRoom(socket.data.code);
     if (!room) return;
