@@ -1,5 +1,5 @@
 import { clearReconnectSession, getReconnectSession, saveProfile, saveReconnectSession } from './storage.js';
-import { playVictorySound } from './audio.js';
+import { playDefeatSound, playVictorySound } from './audio.js';
 
 export function bindSocketEvents({ socket, App, setScreen, renderLobby, showError }) {
   
@@ -54,6 +54,7 @@ export function bindSocketEvents({ socket, App, setScreen, renderLobby, showErro
     App.config = config;
     App.lobbyPlayers = players;
     App.victoryPlayed = false;
+    App.defeatPlayed = false;
     setScreen('lobby');
   });
   
@@ -80,11 +81,21 @@ export function bindSocketEvents({ socket, App, setScreen, renderLobby, showErro
   socket.on('phase-finished', payload => {
     App.finalLeaderboard = payload.leaderboard;
     const topScore = payload.leaderboard.length ? payload.leaderboard[0].score : null;
-    const isWinner = payload.leaderboard.some(player => player.id === App.playerId && player.score === topScore);
+    const bottomScore = payload.leaderboard.length ? payload.leaderboard[payload.leaderboard.length - 1].score : null;
+    const playerResult = payload.leaderboard.find(player => player.id === App.playerId);
+    const isWinner = Boolean(playerResult && playerResult.score === topScore);
+    const isLoser = Boolean(playerResult && playerResult.score === bottomScore);
+
     if (isWinner && !App.victoryPlayed) {
       App.victoryPlayed = true;
       playVictorySound();
     }
+
+    if (isLoser && !App.defeatPlayed) {
+      App.defeatPlayed = true;
+      playDefeatSound();
+    }
+
     setScreen('finished');
   });
   

@@ -14,6 +14,7 @@ export const App = {
   revealData: null,
   finalLeaderboard: [],
   victoryPlayed: false,
+  defeatPlayed: false,
   config: { rounds: 0, roundSeconds: 0, catSeconds: 0, difficulty: '' },
 };
 
