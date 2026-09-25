@@ -59,5 +59,6 @@ module.exports = [
   ["Teapot", "Coffee Pot"],
   ["Sandcastle", "Snow Fort"],
   ["Campfire", "Fire Pit"],
+  ["Beetle", "Lady Bug"]
   ["Bonfire", "Fireplace"]
 ];
