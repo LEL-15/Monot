@@ -183,7 +183,7 @@ io.on('connection', (socket) => {
       hostId: socket.id,
       hostName: cleanName,
       rounds: clampInt(rounds, 1, 10, 3),
-      roundSeconds: clampInt(roundSeconds, 15, 180, 60),
+      roundSeconds: clampInt(roundSeconds, 5, 180, 60),
       catSeconds: clampInt(catSeconds, 10, 120, 30),
       difficulty,
       hiddenWords
@@ -195,6 +195,24 @@ io.on('connection', (socket) => {
     socket.join(room.code);
     socket.emit('game-joined', { code: room.code, playerId: player.id, isHost: true, reconnectToken: socket.data.reconnectToken, config: gameConfig(room) });
     io.to(room.code).emit('lobby-update', { players: rooms.lobbyPlayers(room) });
+  });
+
+  socket.on('update-game-settings', (requestedConfig = {}) => {
+    const room = rooms.getRoom(socket.data.code);
+    if (!room || room.hostId !== socket.data.playerId || room.phase !== 'lobby') return;
+    const difficulty = ['Easy', 'Medium', 'Hard'].includes(requestedConfig.difficulty)
+      ? requestedConfig.difficulty
+      : null;
+    if (!difficulty) return socket.emit('game-error', { message: 'Choose a valid word pairing difficulty.' });
+    const config = {
+      rounds: clampInt(requestedConfig.rounds, 1, 10, room.rounds),
+      roundSeconds: clampInt(requestedConfig.roundSeconds, 5, 180, room.roundSeconds),
+      catSeconds: clampInt(requestedConfig.catSeconds, 10, 120, room.catSeconds),
+      difficulty,
+      hiddenWords: Boolean(requestedConfig.hiddenWords),
+    };
+    rooms.updateRoomSettings(room, config);
+    io.to(room.code).emit('lobby-settings-updated', { config: gameConfig(room) });
   });
 
   socket.on('join-game', ({ code, name, reconnectToken }) => {
@@ -220,10 +238,25 @@ io.on('connection', (socket) => {
     sendCurrentPhase(socket, room);
   });
 
-  socket.on('start-game', () => {
+  socket.on('start-game', (requestedConfig = {}) => {
     const room = rooms.getRoom(socket.data.code);
     if (!room || room.hostId !== socket.data.playerId || room.phase !== 'lobby') return;
     if (room.players.size < 2) return socket.emit('game-error', { message: 'Need at least 2 players.' });
+    const settings = requestedConfig || {};
+    const difficulty = settings.difficulty == null
+      ? room.difficulty
+      : ['Easy', 'Medium', 'Hard'].includes(settings.difficulty)
+        ? settings.difficulty
+        : null;
+    if (!difficulty) return socket.emit('game-error', { message: 'Choose a valid word pairing difficulty.' });
+    rooms.updateRoomSettings(room, {
+      rounds: clampInt(settings.rounds, 1, 10, room.rounds),
+      roundSeconds: clampInt(settings.roundSeconds, 5, 180, room.roundSeconds),
+      catSeconds: clampInt(settings.catSeconds, 10, 120, room.catSeconds),
+      difficulty,
+      hiddenWords: settings.hiddenWords == null ? room.hiddenWords : Boolean(settings.hiddenWords),
+    });
+    io.to(room.code).emit('lobby-settings-updated', { config: gameConfig(room) });
     startDrawingPhase(room, 1);
   });
 

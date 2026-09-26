@@ -16,7 +16,7 @@ function shuffled(arr) {
   return a;
 }
 
-function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, difficulty, hiddenWords }) {
+function getWordPairs(difficulty) {
   let words;
   switch (difficulty) {
     case 'Hard':
@@ -31,9 +31,19 @@ function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, 
     default:
       throw new Error(`Invalid difficulty: ${difficulty}`);
   }
+  return words;
+}
+
+function makeRoundWords(difficulty, rounds) {
+  const words = getWordPairs(difficulty);
   const pairsPool = shuffled(words);
   const roundWords = [];
   for (let i = 0; i < rounds; i++) roundWords.push(pairsPool[i % pairsPool.length]);
+  return roundWords;
+}
+
+function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, difficulty, hiddenWords }) {
+  const roundWords = makeRoundWords(difficulty, rounds);
 
   const room = {
     code,
@@ -66,6 +76,16 @@ function createRoom({ code, hostId, hostName, rounds, roundSeconds, catSeconds, 
   });
   rooms.set(code, room);
   return room;
+}
+
+function updateRoomSettings(room, config) {
+  const changedWordPool = room.rounds !== config.rounds || room.difficulty !== config.difficulty;
+  room.rounds = config.rounds;
+  room.roundSeconds = config.roundSeconds;
+  room.catSeconds = config.catSeconds;
+  room.difficulty = config.difficulty;
+  room.hiddenWords = Boolean(config.hiddenWords);
+  if (changedWordPool) room.roundWords = makeRoundWords(room.difficulty, room.rounds);
 }
 
 function getRoom(code) {
@@ -183,6 +203,7 @@ function computeRoundResults(room, roundIdx) {
 module.exports = {
   rooms,
   createRoom,
+  updateRoomSettings,
   getRoom,
   deleteRoom,
   addPlayer,

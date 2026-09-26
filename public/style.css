@@ -111,6 +111,12 @@ canvas{ display:block; width:100%; max-width: 480px; margin: 0 auto; background:
 .final-list li.win{ color: var(--gold); }
 .small-note{ color:var(--ink-dim); font-size:0.78rem; text-align:center; margin-top:18px; line-height:1.5; }
 .error-box{ background: rgba(255,92,138,0.14); border:1px solid var(--failure); color:var(--failure); padding:12px 14px; border-radius:10px; margin-bottom:14px; font-size:0.9rem; }
+.lobby-settings-row{ margin:10px 0; }
+.lobby-settings-row input{ min-width:0; }
+.lobby-settings-form :disabled{ opacity:0.78; cursor:not-allowed; }
+.lobby-checkbox{ display:flex; align-items:center; gap:8px; }
+.lobby-checkbox input{ width:18px; height:18px; margin:0; accent-color:var(--gold); }
+.settings-list li strong{ text-align:right; }
 
 /* How to Play dialog */
 .modal-backdrop{ position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:8px; background:rgba(5,18,48,0.78); }

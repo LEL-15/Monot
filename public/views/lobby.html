@@ -5,16 +5,23 @@
 </div>
 <div class="card">
     <h3>Game Configuration</h3>
-    <label for="rounds">Rounds</label>
-    <div id="rounds"></div>
-    <label for="roundSeconds">Draw time (sec)</label>
-    <div id="roundSeconds"></div>
-    <label for="catSeconds">Sort time (sec)</label>
-    <div id="catSeconds"></div>
-    <label for="difficulty">Word Pairing Difficulty</label>
-    <div id="difficulty"></div>
-    <label for="hiddenWords">Hidden Words</label>
-    <div id="hiddenWords"></div>
+    <div id="lobbySettings">
+        <form id="lobbySettingsForm" class="lobby-settings-form" data-initialized="false">
+            <div class="row lobby-settings-row">
+                <div><label for="lobbyRounds">Rounds</label><input type="number" id="lobbyRounds" min="1" max="10" /></div>
+                <div><label for="lobbyRoundSeconds">Draw time (sec)</label><input type="number" id="lobbyRoundSeconds" min="5" max="180" /></div>
+                <div><label for="lobbyCatSeconds">Sort time (sec)</label><input type="number" id="lobbyCatSeconds" min="10" max="120" /></div>
+            </div>
+            <label for="lobbyDifficulty">Word Pairing Difficulty</label>
+            <select id="lobbyDifficulty">
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+            </select>
+            <label class="lobby-checkbox"><input type="checkbox" id="lobbyHiddenWords" /> Hidden Words</label>
+        </form>
+    </div>
+    <div id="lobbyError"></div>
 </div>
 <div class="card">
     <h3>Players (<span id="lobbyPlayerCount">0</span>)</h3>

@@ -24,6 +24,11 @@ export function bindSocketEvents({ socket, App, setScreen, renderLobby, showErro
   socket.on('game-error', ({ message }) => {
     const button = document.getElementById('createBtn');
     if (button) { button.disabled = false; button.textContent = 'Create Game'; }
+    const startButton = document.getElementById('startBtn');
+    if (startButton) {
+      startButton.disabled = App.lobbyPlayers.length < 2;
+      startButton.textContent = startButton.disabled ? 'Need at least 2 players' : 'Start Game';
+    }
     showError(message);
   });
 
@@ -48,6 +53,22 @@ export function bindSocketEvents({ socket, App, setScreen, renderLobby, showErro
   socket.on('lobby-update', ({ players }) => {
     App.lobbyPlayers = players;
     if (App.screen === 'lobby') renderLobby();
+  });
+
+  socket.on('lobby-settings-updated', ({ config }) => {
+    App.config = config;
+    if (App.isHost) saveProfile(getReconnectSession()?.name || '', App.code, config);
+    if (App.screen !== 'lobby' || App.isHost) return;
+    const settingsForm = document.getElementById('lobbySettingsForm');
+    if (!settingsForm) {
+      renderLobby();
+      return;
+    }
+    document.getElementById('lobbyRounds').value = config.rounds;
+    document.getElementById('lobbyRoundSeconds').value = config.roundSeconds;
+    document.getElementById('lobbyCatSeconds').value = config.catSeconds;
+    document.getElementById('lobbyDifficulty').value = config.difficulty;
+    document.getElementById('lobbyHiddenWords').checked = config.hiddenWords;
   });
   
   socket.on('game-restarted', ({ config, players }) => {

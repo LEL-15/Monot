@@ -1,5 +1,5 @@
 import { App, boardState } from './modules/state.js';
-import { clearReconnectSession, getReconnectSession, prefillProfile, saveProfile, saveReconnectSession } from './modules/storage.js';
+import { clearReconnectSession, getReconnectSession, getStoredProfile, prefillProfile, saveProfile, saveReconnectSession } from './modules/storage.js';
 import { renderDrawing } from './modules/drawing.js';
 import { renderCategorizing } from './modules/categorizing.js';
 import { renderFinished, renderReveal } from './modules/results.js';
@@ -7,6 +7,7 @@ import { bindSocketEvents } from './modules/socket.js';
 
 const socket = io();
 const root = document.getElementById('app');
+let lobbySettingsSaveTimer = null;
 
 function esc(value) {
   const element = document.createElement('div');
@@ -74,6 +75,8 @@ async function loadView(viewName) {
   root.innerHTML = viewHtml;
   root.dataset.page = viewName;
 
+  if (viewName === 'host' || viewName === 'join') prefillProfile();
+
   if (viewName === 'home') {
     document.querySelectorAll('[data-view]').forEach(button => {
       button.onclick = () => setScreen(button.dataset.view);
@@ -101,29 +104,31 @@ async function loadView(viewName) {
   }
 
   if (viewName === 'host') {
-    prefillProfile();
     document.getElementById('hostForm').onsubmit = event => {
       event.preventDefault();
       const name = document.getElementById('name').value.trim() || 'Host';
       const gameCode = document.getElementById('gameCode').value.trim().toUpperCase();
-      const rounds = parseInt(document.getElementById('rounds').value, 10) || 3;
-      const roundSeconds = parseInt(document.getElementById('roundSeconds').value, 10) || 60;
-      const catSeconds = parseInt(document.getElementById('catSeconds').value, 10) || 30;
-      const difficulty = document.getElementById('difficulty').value || 'easy';
-      const hiddenWords = document.getElementById('hiddenWords').checked;
+      const profile = getStoredProfile() || {};
+      const difficulty = ['Easy', 'Medium', 'Hard'].includes(profile.difficulty) ? profile.difficulty : 'Hard';
+      const config = {
+        rounds: Number(profile.rounds) || 3,
+        roundSeconds: Number(profile.roundSeconds) || 20,
+        catSeconds: Number(profile.catSeconds) || 60,
+        difficulty,
+        hiddenWords: profile.hiddenWords ?? true,
+      };
       const button = document.getElementById('createBtn');
       button.disabled = true;
       button.textContent = 'Creating...';
-      saveProfile(name, gameCode, { rounds, roundSeconds, catSeconds, difficulty, hiddenWords });
+      saveProfile(name, gameCode, config);
       saveReconnectSession({ code: gameCode, name, reconnectToken: getReconnectSession()?.reconnectToken || null });
-      socket.emit('host-game', { gameCode, name, rounds, roundSeconds, catSeconds, difficulty, hiddenWords });
+      socket.emit('host-game', { gameCode, name, ...config });
     };
     bindNavigationButtons();
     return;
   }
 
   if (viewName === 'join') {
-    prefillProfile();
     document.getElementById('joinForm').onsubmit = event => {
       event.preventDefault();
       const code = document.getElementById('gameCode').value.trim().toUpperCase();
@@ -163,21 +168,52 @@ function setScreen(name) {
 function renderLobby() {
   const players = App.lobbyPlayers;
   const lobbyCode = document.getElementById('lobbyCode');
-  const rounds = document.getElementById('rounds');
-  const roundSeconds = document.getElementById('roundSeconds');
-  const catSeconds = document.getElementById('catSeconds');
-  const difficulty = document.getElementById('difficulty');
-  const hiddenWords = document.getElementById('hiddenWords');
+  const settingsForm = document.getElementById('lobbySettingsForm');
   const count = document.getElementById('lobbyPlayerCount');
   const list = document.getElementById('lobbyPlayerList');
   const actions = document.getElementById('lobbyActions');
 
   if (lobbyCode) lobbyCode.textContent = App.code;
-  if (rounds) rounds.textContent = String(App.config.rounds);
-  if (roundSeconds) roundSeconds.textContent = String(App.config.roundSeconds);
-  if (catSeconds) catSeconds.textContent = String(App.config.catSeconds);
-  if (difficulty) difficulty.textContent = App.config.difficulty;
-  if (hiddenWords) hiddenWords.textContent = App.config.hiddenWords ? 'Yes' : 'No';
+  if (settingsForm) {
+    const initialized = settingsForm.dataset.initialized === 'true';
+    const roundsInput = document.getElementById('lobbyRounds');
+    const roundSecondsInput = document.getElementById('lobbyRoundSeconds');
+    const catSecondsInput = document.getElementById('lobbyCatSeconds');
+    const difficultyInput = document.getElementById('lobbyDifficulty');
+    const hiddenWordsInput = document.getElementById('lobbyHiddenWords');
+    if (!App.isHost || !initialized) {
+      roundsInput.value = App.config.rounds;
+      roundSecondsInput.value = App.config.roundSeconds;
+      catSecondsInput.value = App.config.catSeconds;
+      difficultyInput.value = App.config.difficulty;
+      hiddenWordsInput.checked = App.config.hiddenWords;
+    }
+    [roundsInput, roundSecondsInput, catSecondsInput, difficultyInput, hiddenWordsInput]
+      .forEach(input => { input.disabled = !App.isHost; });
+    settingsForm.dataset.initialized = 'true';
+    settingsForm.onsubmit = event => event.preventDefault();
+    const saveSettings = () => {
+      if (lobbySettingsSaveTimer) clearTimeout(lobbySettingsSaveTimer);
+      lobbySettingsSaveTimer = null;
+      socket.emit('update-game-settings', {
+        rounds: document.getElementById('lobbyRounds').value,
+        roundSeconds: document.getElementById('lobbyRoundSeconds').value,
+        catSeconds: document.getElementById('lobbyCatSeconds').value,
+        difficulty: document.getElementById('lobbyDifficulty').value,
+        hiddenWords: document.getElementById('lobbyHiddenWords').checked,
+      });
+    };
+    settingsForm.oninput = event => {
+      if (event.target.type !== 'number') return;
+      if (lobbySettingsSaveTimer) clearTimeout(lobbySettingsSaveTimer);
+      lobbySettingsSaveTimer = setTimeout(saveSettings, 300);
+    };
+    settingsForm.onchange = event => {
+      if (event.target.type === 'number' || event.target.type === 'checkbox' || event.target.tagName === 'SELECT') {
+        saveSettings();
+      }
+    };
+  }
   if (count) count.textContent = String(players.length);
   if (list) list.innerHTML = players.map(player => `<li>${esc(player.name)}</li>`).join('') || '<li>Waiting for players...</li>';
   if (actions) {
@@ -193,7 +229,13 @@ function renderLobby() {
     startButton.onclick = () => {
       startButton.disabled = true;
       startButton.textContent = 'Starting...';
-      socket.emit('start-game');
+      socket.emit('start-game', {
+        rounds: document.getElementById('lobbyRounds').value,
+        roundSeconds: document.getElementById('lobbyRoundSeconds').value,
+        catSeconds: document.getElementById('lobbyCatSeconds').value,
+        difficulty: document.getElementById('lobbyDifficulty').value,
+        hiddenWords: document.getElementById('lobbyHiddenWords').checked,
+      });
     };
   }
 
