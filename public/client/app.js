@@ -78,6 +78,24 @@ async function loadView(viewName) {
     document.querySelectorAll('[data-view]').forEach(button => {
       button.onclick = () => setScreen(button.dataset.view);
     });
+    const howToPlayButton = document.getElementById('howToPlayButton');
+    const howToPlayModal = document.getElementById('howToPlayModal');
+    const gotItHowToPlay = document.getElementById('gotItHowToPlay');
+    const closeHowToPlayModal = () => {
+      howToPlayModal.hidden = true;
+      howToPlayButton.focus();
+    };
+    howToPlayButton.onclick = () => {
+      howToPlayModal.hidden = false;
+      gotItHowToPlay.focus();
+    };
+    gotItHowToPlay.onclick = closeHowToPlayModal;
+    howToPlayModal.onclick = event => {
+      if (event.target === howToPlayModal) closeHowToPlayModal();
+    };
+    howToPlayModal.onkeydown = event => {
+      if (event.key === 'Escape') closeHowToPlayModal();
+    };
     fadeCover();
     return;
   }

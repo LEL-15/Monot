@@ -10,3 +10,19 @@
 <div id="homeError"></div>
 <button class="btn-primary page-button" data-view="host">Host Game</button>
 <button class="btn-ghost page-button" data-view="join">Join Game</button>
+<button class="btn-ghost page-button" id="howToPlayButton" type="button">How to Play</button>
+<div class="modal-backdrop" id="howToPlayModal" hidden>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="howToPlayTitle" aria-describedby="howToPlayDescription">
+        <h2 id="howToPlayTitle">How to Play</h2>
+        <p id="howToPlayDescription">Draw and identify sketches of assigned topics to earn points. Each round is composed of four phases</p>
+        <ol class="how-to-play-list">
+            <li><strong>Word assignment</strong> You will be shown a word to draw. Spend this time reading the word and designing your masterpiece.</li>
+            <li><strong>Draw your word.</strong> You will have a short time to draw your assigned word.</li>
+            <li><strong>Sort the drawings.</strong> Review the drawings of other players and determine if they drew the same thing as you or something else.</li>
+            <li><strong>Reveal and score.</strong> Reveal what every player was drawing and who identified it correctly. Earn points for each drawing you identify correcty and each person who correctly identified your drawing.</li>
+        </ol>
+        <p>Repeat the process for multiple rounds to accumulate points and determine the winner!</p>
+        <p>Host or join a game to start playing.</p>
+        <button class="modal-confirm" id="gotItHowToPlay" type="button">Let's play!</button>
+    </section>
+</div>

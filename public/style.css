@@ -76,6 +76,7 @@ button:disabled{ opacity:0.4; cursor:not-allowed; }
 button[type="submit"] { background: var(--gold); color:var(--ink-dim); width:100%; margin-top:16px; }
 .btn-ghost{ background: var(--wordA); color: var(--ink-dim); border:1px solid var(--line); width:100%; margin-top:10px; }
 .page-button{ display:block; text-align:center; text-decoration:none; }
+#howToPlayButton{ width:min(100%, 260px); margin:10px auto 0; background:var(--panel2); color:var(--ink); }
 .pill{ display:inline-block; padding: 4px 12px; border-radius: 999px; font-weight:700; font-size:0.85rem; }
 .pill-a{ background: var(--wordA); color: var(--wordA-ink); }
 .pill-b{ background: var(--wordB); color: var(--wordB-ink); }
@@ -110,6 +111,17 @@ canvas{ display:block; width:100%; max-width: 480px; margin: 0 auto; background:
 .final-list li.win{ color: var(--gold); }
 .small-note{ color:var(--ink-dim); font-size:0.78rem; text-align:center; margin-top:18px; line-height:1.5; }
 .error-box{ background: rgba(255,92,138,0.14); border:1px solid var(--failure); color:var(--failure); padding:12px 14px; border-radius:10px; margin-bottom:14px; font-size:0.9rem; }
+
+/* How to Play dialog */
+.modal-backdrop{ position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:8px; background:rgba(5,18,48,0.78); }
+.modal-backdrop[hidden]{ display:none; }
+.modal-panel{ position:relative; width:min(100%, 500px); max-height:calc(100vh - 16px); max-height:calc(100dvh - 16px); overflow:auto; background:var(--panel); border:2px solid var(--gold); border-radius:var(--radius); padding:26px 24px 22px; color:var(--ink); box-shadow:0 18px 60px rgba(0,0,0,0.35); }
+.modal-panel h2{ display:block; margin:0 0 8px; font-size:1.55rem; }
+.modal-panel p{ margin:0 0 14px; line-height:1.5; }
+.modal-confirm{ display:block; width:min(100%, 160px); margin:18px auto 0; background:var(--gold); color:var(--ink-dim); }
+.how-to-play-list{ margin:0; padding-left:24px; }
+.how-to-play-list li{ padding:9px 0 9px 4px; line-height:1.45; border-top:1px solid rgba(244,242,234,0.24); }
+.how-to-play-list strong{ color:var(--gold); }
 
 /* Game form */
 #gameCode{text-transform: uppercase;}
